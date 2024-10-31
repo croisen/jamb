@@ -31,21 +31,22 @@ pub async fn eight_ball(ctx: Context<'_>, question: Vec<String>) -> Result<(), E
             .as_secs(),
     );
 
-    let potential_answer = (x.next() % 5).into();
-    if QUESTIONS.lock().unwrap().len() > 20 {
-        QUESTIONS.lock().unwrap().pop_first();
-    }
-
-    let answer: BotEightBallAnswer = match QUESTIONS.lock().unwrap().get(&question.join(" ")) {
-        Some(a) => a.to_owned(),
-        None => {
-            QUESTIONS
-                .lock()
-                .unwrap()
-                .insert(question.join(" "), potential_answer);
-            potential_answer
+    let answer: BotEightBallAnswer;
+    {
+        let mut questions = QUESTIONS.lock().unwrap();
+        let potential_answer = (x.next() % 5).into();
+        if questions.len() > 20 {
+            questions.pop_first();
         }
-    };
+
+        answer = match questions.get(&question.join(" ")) {
+            Some(a) => a.to_owned(),
+            None => {
+                questions.insert(question.join(" "), potential_answer);
+                potential_answer
+            }
+        };
+    }
 
     let mut reply: String = "`".to_string() + &question.join(" ") + "`\n";
     match answer {

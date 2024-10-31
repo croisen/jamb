@@ -1,10 +1,15 @@
 use crate::commands::*;
 use crate::config::BotConfig;
 
+use std::collections::HashMap;
+use std::sync::Mutex;
+
 use log::info;
 use poise::serenity_prelude as serenity;
 
-pub struct BotData {}
+pub struct BotData {
+    pub music_queue: Mutex<HashMap<serenity::GuildId, music::Queue>>,
+}
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, BotData, Error>;
@@ -17,6 +22,8 @@ pub async fn init_run(conf: BotConfig) {
         general::eight_ball(),
         general::help(),
         general::ping(),
+        music::play(),
+        music::queue(),
     ];
 
     let prefix_options = poise::PrefixFrameworkOptions {
@@ -47,7 +54,13 @@ pub async fn init_run(conf: BotConfig) {
             },
             ..Default::default()
         })
-        .setup(|_ctx, _ready, _fr| Box::pin(async move { Ok(BotData {}) }))
+        .setup(|_ctx, _ready, _fr| {
+            Box::pin(async move {
+                Ok(BotData {
+                    music_queue: Mutex::new(HashMap::new()),
+                })
+            })
+        })
         .build();
 
     let client = serenity::ClientBuilder::new(conf.token, intents)

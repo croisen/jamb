@@ -1,8 +1,9 @@
 use crate::serenity_init::{BotData, Context, Error};
-use crate::utils::bot_info::{bot_avatar, bot_name};
+use crate::utils::bot_info::{bot_add_time, bot_avatar, bot_name};
 
 use std::collections::BTreeMap;
 
+use log::warn;
 use poise::serenity_prelude as serenity;
 
 #[poise::command(category = "General", slash_command, prefix_command, guild_only)]
@@ -22,50 +23,60 @@ pub async fn help(ctx: Context<'_>, cmd_or_cat: Option<String>) -> Result<(), Er
 
     let mut embed = serenity::CreateEmbed::new();
     match cmd_or_cat {
-        Some(cm_ca) => embed = help_one(ctx, cat, &mut embed, cm_ca).await?,
-        None => embed = help_all(ctx, cat, &mut embed).await?,
+        Some(cm_ca) => embed = help_one(cat, embed, cm_ca).await?,
+        None => embed = help_all(cat, embed).await?,
     }
 
     if let Some(avatar_url) = bot_avatar(ctx) {
         embed = embed.thumbnail(avatar_url);
     }
 
-    let timestamp: serenity::Timestamp = chrono::Utc::now().to_rfc3339().parse()?;
     embed = embed.title(format!("Help for {}", bot_name(ctx)));
-    embed = embed.timestamp(timestamp);
+    embed = bot_add_time(embed);
 
     let msg = serenity::CreateMessage::new().embed(embed);
-
     if let Err(why) = ctx.channel_id().send_message(ctx.http(), msg).await {
-        eprintln!("{why}");
+        warn!("Failed to send message: {why}");
     }
 
     Ok(())
 }
 
-async fn help_all<'aa>(
-    ctx: Context<'_>,
+async fn help_all(
     c: BTreeMap<Option<String>, Vec<&poise::Command<BotData, Error>>>,
-    e: &'aa mut serenity::CreateEmbed,
+    mut e: serenity::CreateEmbed,
 ) -> Result<serenity::CreateEmbed, Error> {
-    let mut ee = e.clone();
     for category in c {
-        ee = ee.field(category.0.unwrap_or("Uncategorised".to_string()), "", false);
-        for command in category.1 {
-            ee = ee.field("", format!("{}{}", ctx.prefix(), command.name), false);
+        let mut commands = "".to_string();
+        let mut c_iter = category.1.iter();
+        let mut cc = c_iter.next();
+        // No need to check if there's something as a command should exist
+        // as long as the category exists
+        loop {
+            commands += &cc.unwrap().name;
+            cc = c_iter.next();
+            if cc.is_some() {
+                commands += ", ";
+            } else {
+                break;
+            }
         }
+
+        e = e.field(
+            category.0.unwrap_or("Uncategorised".to_string()),
+            "`".to_string() + &commands + "`",
+            false,
+        );
     }
 
-    Ok(ee)
+    Ok(e)
 }
 
-async fn help_one<'aa>(
-    ctx: Context<'_>,
+async fn help_one(
     c: BTreeMap<Option<String>, Vec<&poise::Command<BotData, Error>>>,
-    e: &'aa mut serenity::CreateEmbed,
+    mut e: serenity::CreateEmbed,
     cm_ca: String,
 ) -> Result<serenity::CreateEmbed, Error> {
-    let mut ee = e.clone();
     let mut cget = None;
     for cat in &c {
         if cat
@@ -80,18 +91,33 @@ async fn help_one<'aa>(
 
     match cget {
         Some(ca) => {
-            ee = ee.field(
-                ca.0.clone().unwrap_or("Uncategorised".to_string()),
-                "",
-                false,
-            );
-
-            for cm in ca.1 {
-                ee = ee.field("", format!("{}{}", ctx.prefix(), cm.name), false);
+            let mut commands = "".to_string();
+            let mut c_iter = ca.1.iter();
+            let mut cc = c_iter.next();
+            // No need to check if there's something as a command should exist
+            // as long as the category exists
+            loop {
+                commands += &cc.unwrap().name;
+                cc = c_iter.next();
+                if cc.is_some() {
+                    commands += ", ";
+                } else {
+                    break;
+                }
             }
 
             if ca.1.len() == 0 {
-                ee = ee.field("", "No commands for this category", false);
+                e = e.field(
+                    ca.0.clone().unwrap_or("Uncategorised".to_string()),
+                    "No commands for this category",
+                    false,
+                );
+            } else {
+                e = e.field(
+                    ca.0.clone().unwrap_or("Uncategorised".to_string()),
+                    "`".to_string() + &commands + "`",
+                    false,
+                );
             }
         }
         None => {
@@ -107,9 +133,8 @@ async fn help_one<'aa>(
 
             match cm {
                 Some(cmd) => {
-                    ee = ee.field("", format!("{}{}", ctx.prefix(), cmd.name), false);
-                    ee = ee.field(
-                        "",
+                    e = e.field(
+                        cmd.name.clone(),
                         format!(
                             "{}",
                             cmd.help_text.clone().unwrap_or("No help info".to_string())
@@ -118,11 +143,11 @@ async fn help_one<'aa>(
                     );
                 }
                 None => {
-                    ee = ee.field("", format!("Command {} not found", cm_ca), false);
+                    e = e.field(cm_ca, "Command not found", false);
                 }
             }
         }
     }
 
-    Ok(ee)
+    Ok(e)
 }

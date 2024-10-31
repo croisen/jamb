@@ -13,8 +13,8 @@ pub async fn logout(ctx: Context<'_>) -> Result<(), Error> {
                 ctx.author().discriminator
             );
             // Had to ask Gemini about this
-            // Though it said that http in context has the logout function
-            // It suggested this after I said it doesn't exist
+            // Though there are still some stuff that is left over
+            // When exiting via main
             ctx.framework().shard_manager().shutdown_all().await;
         }
         None => {
