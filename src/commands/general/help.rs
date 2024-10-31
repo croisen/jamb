@@ -112,9 +112,7 @@ async fn help_one<'aa>(
                         "",
                         format!(
                             "{}",
-                            cmd.description
-                                .clone()
-                                .unwrap_or("No description".to_string())
+                            cmd.help_text.clone().unwrap_or("No help info".to_string())
                         ),
                         false,
                     );

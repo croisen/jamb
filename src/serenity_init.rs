@@ -1,6 +1,7 @@
 use crate::commands::*;
 use crate::config::BotConfig;
 
+use log::info;
 use poise::serenity_prelude as serenity;
 
 pub struct BotData {}
@@ -13,6 +14,7 @@ pub async fn init_run(conf: BotConfig) {
     let commands = vec![
         admin::logout(),
         admin::register(),
+        general::eight_ball(),
         general::help(),
         general::ping(),
     ];
@@ -30,6 +32,19 @@ pub async fn init_run(conf: BotConfig) {
             commands,
             prefix_options,
             initialize_owners: true,
+            event_handler: |_ctx, ev, _fr_ctx, _bd| {
+                match ev {
+                    serenity::FullEvent::Ready { data_about_bot } => {
+                        info!(
+                            "Bot {}#{:#?} is now ready",
+                            data_about_bot.user.name, data_about_bot.user.discriminator
+                        );
+                    }
+                    _ => {}
+                }
+
+                Box::pin(async move { Ok(()) })
+            },
             ..Default::default()
         })
         .setup(|_ctx, _ready, _fr| Box::pin(async move { Ok(BotData {}) }))
