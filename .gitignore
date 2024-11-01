@@ -6,3 +6,4 @@ config.json
 /nobita-build/
 /nobita-cache/
 /make-build/
+/make-cache/
