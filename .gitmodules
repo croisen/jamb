@@ -1,0 +1,21 @@
+[submodule "3rd_party/json-c"]
+	path = 3rd_party/json-c
+	url = https://github.com/json-c/json-c
+[submodule "3rd_party/concord"]
+	path = 3rd_party/concord
+	url = https://github.com/Cogmasters/concord
+[submodule "3rd_party/openssl"]
+	path = 3rd_party/openssl
+	url = https://github.com/openssl/openssl
+[submodule "3rd_party/curl"]
+	path = 3rd_party/curl
+	url = https://github.com/curl/curl
+[submodule "3rd_party/ffmpeg"]
+	path = 3rd_party/ffmpeg
+	url = https://git.ffmpeg.org/ffmpeg.git
+[submodule "3rd_party/opus"]
+	path = 3rd_party/opus
+	url = https://github.com/xiph/opus
+[submodule "3rd_party/x264"]
+	path = 3rd_party/x264
+	url = https://code.videolan.org/videolan/x264.git

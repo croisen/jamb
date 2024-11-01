@@ -1,12 +1,10 @@
 # Just Anotha Music Bot
 
-Just trying to create a music bot in rust
+Just trying to create a music bot in ~rust~ C (I ain't skilled to mingle with
+the borrow checker with async and lifetimes)
 
 ## Main Dependencies
--   [chrono](https://github.com/chronotope/chrono)
--   [clap](https://github.com/clap-rs/clap)
--   [fern](https://github.com/daboross/fern)
--   [log](https://github.com/rust-lang/log)
--   [poise](https://github.com/serenity-rs/poise)
--   [serde_json](https://github.com/serde-rs/json)
--   [tokio](https://github.com/tokio-rs/tokio)
+-   [concord](https://github.com/Cogmasters/concord)
+-   [curl](https://github.com/curl/curl)
+-   [ffmpeg](https://git.ffmpeg.org/ffmpeg.git)
+-   [json-c](https://github.com/json-c/json-c)

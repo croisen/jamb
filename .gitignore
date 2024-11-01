@@ -1,3 +1,8 @@
-/target
+/target/
 
 config.json
+
+*.o
+/nobita-build/
+/nobita-cache/
+/make-build/
