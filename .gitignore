@@ -1,3 +1,6 @@
-/target
+/env/
+/logs/
+/ffmpeg/
+__pycache__/
 
 config.json
