@@ -31,7 +31,6 @@ async def help(ctx: Context, cmd_or_cat: Optional[str]) -> None:
         cmd_found = False
         for cogs in ctx.bot.cogs.values():
             cmds = cogs.get_commands()
-            cmd_names = [c.name.lower() for c in cmds]
 
             if cogs.__cog_name__.lower() == cmd_or_cat.lower():
                 if len(cmds) == 0:

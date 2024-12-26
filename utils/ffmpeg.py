@@ -6,84 +6,64 @@ import shutil
 
 from patoolib import extract_archive
 
-WINDOWS_BUILD = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z"
 
-LINUX_BUILD_AMD32 = (
-    "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-i686-static.tar.xz"
-)
-LINUX_BUILD_AMD64 = (
-    "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz"
-)
-LINUX_BUILD_ARM64 = (
-    "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-arm64-static.tar.xz"
-)
-
-MACOS_BUILD_AMD64 = [
-    "https://evermeet.cx/ffmpeg/ffmpeg-118086-g8272d34377.7z",
-    "https://evermeet.cx/ffmpeg/ffprobe-118086-g8272d34377.7z",
-    "https://evermeet.cx/ffmpeg/ffplay-117286-g262e6f8430.7z",
-]
-
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def download_ffmpeg(ffmpeg_dir: Path) -> Path:
-    plat = platform.system()
-    arch = platform.machine()
+    p_plat = platform.system()
+    p_arch = platform.machine()
 
-    match plat:
-        case "Windows":
-            return download_win(ffmpeg_dir)
-        case "Linux":
-            return download_lin(ffmpeg_dir, arch)
-        case "Mac":
-            pass
-        case _:
-            logger.error(f"Unsupported platform: {plat}")
-            raise Exception("Unknown platform to download ffmpeg for")
+    url = ""
+    name = "ffmpeg-master-latest-gpl"
+    final = ""
+    ffmpeg_dir.mkdir(parents=True, exist_ok=True)
 
+    if p_plat == "Windows":
+        url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win"
+        final = "ffmpeg.exe"
+    elif p_plat == "Linux":
+        url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux"
+        final = "ffmpeg"
+    else:
+        _logger.error(f"Unknown platform type: {p_plat}")
+        raise Exception(f"Unsupported platform: {p_plat} for ffmpeg autodownload")
 
-def download_win(dir: Path) -> Path:
-    d = dir / "windows"
-    d.mkdir(parents=True, exist_ok=True)
-    f = d / "ffmpeg.7z"
-    fe = d / "ffmpeg.exe"
-    if fe.exists():
-        return fe
+    pf = shutil.which(final)
+    if pf:
+        _logger.info(f"Found ffmpeg in {pf}")
+        return Path(pf)
 
-    logger.info(f"Now retrieving ffmpeg from: {WINDOWS_BUILD}")
-    urlretrieve(WINDOWS_BUILD, f)
-    extract_archive(str(f), outdir=str(d))
-    extracted = d.glob("*/ffmpeg.exe").__next__()
-    shutil.copy2(extracted, d)
-    return fe
+    p = ffmpeg_dir / final
+    if p.exists():
+        _logger.info(f"Found ffmpeg in {p}")
+        return p
 
+    _logger.info("FFmpeg not found and attempting auto download")
+    if p_arch == "i386" or p_arch == "i686":
+        _logger.error("32 bit Intel or AMD cpu builds are not supported")
+        raise Exception(f"Unsupported architecture: {p_arch} for ffmpeg autodownload")
+    elif p_arch == "x86_64":
+        url += "64-gpl"
+    else:
+        _logger.error(f"Unknown archiecture type: {p_arch}")
+        raise Exception(f"Unsupported architecture: {p_arch} for ffmpeg autodownload")
 
-def download_lin(dir: Path, arch: str) -> Path:
-    d = dir / "linux"
-    d.mkdir(parents=True, exist_ok=True)
-    f = d / "ffmpeg.tar.xz"
+    if p_plat == "Windows":
+        url += ".zip"
+        name += ".zip"
+    elif p_plat == "Linux":
+        url += ".tar.xz"
+        name += ".tar.xz"
+    else:
+        _logger.error(f"Unknown platform type: {p_plat}")
+        raise Exception(f"Unsupported platform: {p_arch} for ffmpeg autodownload")
 
-    fe = d / "ffmpeg"
-    if fe.exists():
-        return fe
+    _logger.info(f"Downloading ffmpeg from {url}")
+    urlretrieve(url, str(ffmpeg_dir / name))
+    extract_archive(archive=str(ffmpeg_dir / name), outdir=str(ffmpeg_dir))
 
-    match arch:
-        case "i386":
-            logger.info(f"Now retrieving ffmpeg from: {LINUX_BUILD_AMD32}")
-            urlretrieve(LINUX_BUILD_AMD32, f)
-        case "x86_64":
-            logger.info(f"Now retrieving ffmpeg from: {LINUX_BUILD_AMD64}")
-            urlretrieve(LINUX_BUILD_AMD64, f)
-        case "arm64":
-            logger.info(f"Now retrieving ffmpeg from: {LINUX_BUILD_ARM64}")
-            urlretrieve(LINUX_BUILD_ARM64, f)
-        case _:
-            logger.error(f"Unsupported architecture: {arch}")
-            raise Exception("Unknown architecture to download ffmpeg for")
+    for extracted in ffmpeg_dir.glob("*/bin/*"):
+        shutil.copy2(extracted, str(ffmpeg_dir))
 
-    extract_archive(str(f), outdir=str(d))
-    extracted = d.glob("*/ffmpeg").__next__()
-    shutil.copy2(extracted, d)
-
-    return fe
+    return p

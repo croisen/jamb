@@ -8,11 +8,7 @@ __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 
 from typing import Optional
 import logging
-import pprint
-import sys
 
-from discord import ShardInfo
-from discord.embeds import Embed
 from discord.ext.commands import Cog, Context
 from discord.ext.commands import guild_only, hybrid_command
 
@@ -27,6 +23,7 @@ class General(Cog):
         self.logger = logging.getLogger(__name__)
 
     @hybrid_command(description="Shows this message")
+    @guild_only()
     async def help(self, ctx: Context, cmd_or_cat: Optional[str] = None) -> None:
         await help.help(ctx, cmd_or_cat)
 

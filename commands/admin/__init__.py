@@ -7,9 +7,7 @@ __version__ = "0.0.1"
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 
 import logging
-import sys
 
-from discord import ShardInfo
 from discord.ext.commands import Cog, Context
 from discord.ext.commands import guild_only, hybrid_command
 
@@ -34,11 +32,17 @@ class Admin(Cog):
 
         self.logger.warning(f"Now logging out (Invoked by: {ctx.author.name})")
         await ctx.reply("Now logging out")
+        self.bot.mloop.cancel()
+
+        for vc in self.bot.voice_clients:
+            await vc.disconnect()
 
         for shard in self.bot.shards.values():
             await shard.disconnect()
 
-        await self.bot.http.close()  # Dunno why the shard disconnect and this is not on the main close below
+        await (
+            self.bot.http.close()
+        )  # Dunno why the shard disconnect and this is not on the main close below
         await self.bot.close()
 
     @hybrid_command()
@@ -62,6 +66,7 @@ class Admin(Cog):
 
         await ctx.reply("Reloading modules...")
         self.logger.info(f"Reloading extensions (Invoked by: {ctx.author.name})")
+        self.bot.mloop.cancel()
 
         if len(self.extensions) != len(self.bot.extensions):
             self.add_extensions()

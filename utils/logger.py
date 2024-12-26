@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import IO
 import datetime
 import logging
-import os
 import sys
 
 
@@ -30,7 +29,7 @@ class ColorFormat(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         formatter: logging.Formatter = self.formats.get(record.levelno)
-        if formatter is None:
+        if not formatter:
             formatter = self.formats[logging.DEBUG]
 
         if record.exc_info:
@@ -40,6 +39,14 @@ class ColorFormat(logging.Formatter):
         output = formatter.format(record)
         record.exc_text = None
         return output
+
+
+class YTFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name == "utils.yt_vid":
+            return True
+
+        return record.levelno != logging.DEBUG
 
 
 def setup_logging(log_dir: Path) -> None:
@@ -61,9 +68,14 @@ def setup_logging(log_dir: Path) -> None:
             "%(asctime)s %(levelname)-8s %(name)s %(message)s", dt_fmt
         )
 
-    root_logger = logging.getLogger()
     stdout.setFormatter(stdout_formatter)
+    stdout.setLevel(logging.INFO)
+    stdout.addFilter(YTFilter())
+
     file.setFormatter(file_formatter)
-    root_logger.setLevel(logging.INFO)
+    file.setLevel(logging.DEBUG)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
     root_logger.addHandler(stdout)
     root_logger.addHandler(file)
