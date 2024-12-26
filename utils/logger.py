@@ -41,14 +41,6 @@ class ColorFormat(logging.Formatter):
         return output
 
 
-class YTFilter(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:
-        if record.name == "utils.yt_vid":
-            return True
-
-        return record.levelno != logging.DEBUG
-
-
 def setup_logging(log_dir: Path) -> None:
     if not (log_dir.exists() and log_dir.is_dir()):
         log_dir.mkdir()
@@ -70,7 +62,6 @@ def setup_logging(log_dir: Path) -> None:
 
     stdout.setFormatter(stdout_formatter)
     stdout.setLevel(logging.INFO)
-    stdout.addFilter(YTFilter())
 
     file.setFormatter(file_formatter)
     file.setLevel(logging.DEBUG)

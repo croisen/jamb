@@ -55,10 +55,17 @@ class Queue:
         else:
             embed = Embed()
             embed.title = "Added song:"
-            embed.url = self.currently_playing.web_url
+            embed.url = vid.web_url
             embed.timestamp = datetime.datetime.utcnow()
-            embed = embed.set_image(url=self.currently_playing.thumbnail)
+            embed = embed.set_image(url=vid.thumbnail)
+            embed = embed.add_field(
+                name=vid.title,
+                value=f"Duration: {vid.duration_str}",
+                inline=False,
+            )
+
             await channel.send(embed=embed)
+
 
     async def play(self) -> None:
         if not self.currently_playing:
@@ -71,6 +78,11 @@ class Queue:
         embed.url = self.currently_playing.web_url
         embed.timestamp = datetime.datetime.utcnow()
         embed = embed.set_image(url=self.currently_playing.thumbnail)
-        await channel.send(embed=embed)
+        embed = embed.add_field(
+            name=self.currently_playing.title,
+            value=f"Duration: {self.currently_playing.duration_str}",
+            inline=False,
+        )
 
+        await channel.send(embed=embed)
         self.voice_client.play(self.bot.get_song_from_url(self.currently_playing.url))

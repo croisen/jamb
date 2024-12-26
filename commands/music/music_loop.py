@@ -26,7 +26,7 @@ async def music_loop(b: CroiBot, m: Any) -> None:
             _logger.debug(f"Checking {vc.guild.name}")
             if not vc.is_playing():
                 g = q.guild_id
-                _logger.info(
+                _logger.debug(
                     f"{vc.guild.name}: {len(q.queue)} {time.time() - q.last_play_time}"
                 )
 

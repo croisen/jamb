@@ -45,9 +45,12 @@ class Music(Cog):
     async def play(self, ctx: Context, music: str) -> None:
         q = await self.check_vc_get_queue(ctx)
         if not q:
-            vc = await ctx.author.voice.channel.connect()
+            vc = await ctx.author.voice.channel.connect(self_deaf=True)
             q = Queue(self.bot, ctx.guild.id, ctx.channel.id, vc)
-            self.queues.update({id: q})
+            # It wasn't even raising an error when the key was just id a
+            # variable that did not exist here, thus every check queue returned
+            # none
+            self.queues.update({ctx.guild.id: q})
 
         msg = await ctx.reply("Searching")
         vid = await search(music)
@@ -84,7 +87,8 @@ class Music(Cog):
 
         embed = Embed()
         embed.title = f"Music Queue for {ctx.guild.name}"
-        embed.description = f"Currently playing: {q.currently_playing}"
+        embed.description = f"Currently playing: {q.currently_playing.title}"
+        embed.url = q.currently_playing.url
         embed.timestamp = datetime.datetime.utcnow()
         for i, music in enumerate(q.queue, start=1):
             embed = embed.add_field(name=f"#{i:3}: {music.title}")
