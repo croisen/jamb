@@ -32,7 +32,6 @@ class Admin(Cog):
 
         self.logger.warning(f"Now logging out (Invoked by: {ctx.author.name})")
         await ctx.reply("Now logging out")
-        self.bot.mloop.cancel()
 
         for vc in self.bot.voice_clients:
             await vc.disconnect()
@@ -66,7 +65,6 @@ class Admin(Cog):
 
         await ctx.reply("Reloading modules...")
         self.logger.info(f"Reloading extensions (Invoked by: {ctx.author.name})")
-        self.bot.mloop.cancel()
 
         if len(self.extensions) != len(self.bot.extensions):
             self.add_extensions()

@@ -30,12 +30,13 @@ class Queue:
     def shuffle(self) -> None:
         random.shuffle(self.queue)
 
-    async def next(self) -> None:
+    async def next(self, skip: bool) -> None:
         match self.loop_state:
             case self.LS_NORMAL:
                 if len(self.queue) >= 1:
                     self.currently_playing = self.queue.pop(0)
                 else:
+                    self.currently_playing = None
                     return
             case self.LS_LOOP_1:
                 pass
@@ -44,14 +45,15 @@ class Queue:
                 self.currently_playing = self.queue.pop(0)
 
         self.currently_playing = await self.currently_playing.renew()
-        await self.play()
+        if not skip:
+            await self.play()
 
     async def add(self, vid: Video) -> None:
         channel = self.bot.get_channel(self.channel_id)
         self.queue.append(vid)
 
         if not self.currently_playing:
-            await self.next()
+            await self.next(False)
         else:
             embed = Embed()
             embed.title = "Added song:"
@@ -60,12 +62,11 @@ class Queue:
             embed = embed.set_image(url=vid.thumbnail)
             embed = embed.add_field(
                 name=vid.title,
-                value=f"Duration: {vid.duration_str}",
+                value=f"Duration: {vid.duration_str}\nBy: {vid.uploader}",
                 inline=False,
             )
 
             await channel.send(embed=embed)
-
 
     async def play(self) -> None:
         if not self.currently_playing:
@@ -80,7 +81,7 @@ class Queue:
         embed = embed.set_image(url=self.currently_playing.thumbnail)
         embed = embed.add_field(
             name=self.currently_playing.title,
-            value=f"Duration: {self.currently_playing.duration_str}",
+            value=f"Duration: {self.currently_playing.duration_str}\nBy: {self.currently_playing.uploader}",
             inline=False,
         )
 

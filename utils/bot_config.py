@@ -1,6 +1,5 @@
 from typing import Any, Dict, Optional
 from pathlib import Path
-import asyncio
 import json
 import logging
 
@@ -9,8 +8,6 @@ from discord.ext.commands import AutoShardedBot
 
 
 class CroiBot(AutoShardedBot):
-    mloop: asyncio.Task
-
     def __init__(self, config_file: Path, ffmpeg_path: Path):
         self.config: Optional[Dict[str, Any]] = None
         self.config_file: Path = config_file
