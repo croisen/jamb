@@ -14,16 +14,15 @@ def download_ffmpeg(ffmpeg_dir: Path) -> Path:
     p_plat = platform.system()
     p_arch = platform.machine()
 
-    url = ""
-    name = "ffmpeg-master-latest-gpl"
     final = ""
     ffmpeg_dir.mkdir(parents=True, exist_ok=True)
-
     if p_plat == "Windows":
-        url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win"
         final = "ffmpeg.exe"
     elif p_plat == "Linux":
-        url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux"
+        final = "ffmpeg"
+    elif p_plat == "Darwin":
+        final = "ffmpeg"
+    elif p_plat == "Android":
         final = "ffmpeg"
     else:
         _logger.error(f"Unknown platform type: {p_plat}")
@@ -40,30 +39,89 @@ def download_ffmpeg(ffmpeg_dir: Path) -> Path:
         return p
 
     _logger.info("FFmpeg not found and attempting auto download")
-    if p_arch == "i386" or p_arch == "i686":
-        _logger.error("32 bit Intel or AMD cpu builds are not supported")
-        raise Exception(f"Unsupported architecture: {p_arch} for ffmpeg autodownload")
-    elif p_arch == "x86_64":
-        url += "64-gpl"
-    else:
-        _logger.error(f"Unknown archiecture type: {p_arch}")
-        raise Exception(f"Unsupported architecture: {p_arch} for ffmpeg autodownload")
-
     if p_plat == "Windows":
-        url += ".zip"
-        name += ".zip"
+        p = download_win(ffmpeg_dir, p_arch)
     elif p_plat == "Linux":
-        url += ".tar.xz"
-        name += ".tar.xz"
+        p = download_lin(ffmpeg_dir, p_arch)
+    elif p_plat == "Darwin":
+        p = download_mac(ffmpeg_dir, p_arch)
+    elif p_plat == "Android":
+        p = download_lin(ffmpeg_dir, p_arch)
     else:
         _logger.error(f"Unknown platform type: {p_plat}")
-        raise Exception(f"Unsupported platform: {p_arch} for ffmpeg autodownload")
-
-    _logger.info(f"Downloading ffmpeg from {url}")
-    urlretrieve(url, str(ffmpeg_dir / name))
-    extract_archive(archive=str(ffmpeg_dir / name), outdir=str(ffmpeg_dir))
-
-    for extracted in ffmpeg_dir.glob("*/bin/*"):
-        shutil.copy2(extracted, str(ffmpeg_dir))
+        raise Exception(f"Unsupported platform: {p_plat} for ffmpeg autodownload")
 
     return p
+
+
+def download_win(f: Path, arch: str) -> Path:
+    url = ""
+    if arch == "i386" or arch == "i686":
+        url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z"
+    elif arch == "x86_64":
+        url = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-git-full.7z"
+    else:
+        _logger.error(f"Unknown archiecture type: {arch}")
+        raise Exception(f"Unsupported architecture: {arch} for ffmpeg autodownload")
+
+    _logger.info(f"Downloading ffmpeg from {url}")
+    urlretrieve(url, str(f / "ffmpeg.7z"))
+    extract_archive(archive=str(f / "ffmpeg.7z"), outdir=str(f), verbosity=-1)
+    ex = f.glob("*/bin/*")
+    for extracted in f.glob("*/bin/*"):
+        shutil.copy2(extracted, str(f))
+
+    return f / "ffmpeg.exe"
+
+
+def download_lin(f: Path, arch: str) -> Path:
+    _logger.warning(
+        "DNS resolutions for a static build of ffmpeg fails (due to static linking of glibc)"
+    )
+    _logger.warning(
+        "Either install ffmpeg through your package manager or install nscd with your package manager"
+    )
+    url = ""
+    if arch == "i386" or arch == "i686":
+        url = "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-i686-static.tar.xz"
+    elif arch == "x86_64":
+        url = "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz"
+    elif arch == "arm":
+        url = "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-armel-static.tar.xz"
+    elif (
+        arch == "aarch64"
+        or arch == "aarch64_be"
+        or arch == "armv8b"
+        or arch == "armv81"
+    ):
+        url = "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-armhf-static.tar.xz"
+    else:
+        _logger.error(f"Unknown archiecture type: {arch}")
+        raise Exception(f"Unsupported architecture: {arch} for ffmpeg autodownload")
+
+    _logger.info(f"Downloading ffmpeg from {url}")
+    urlretrieve(url, str(f / "ffmpeg.tar.xz"))
+    extract_archive(archive=str(f / "ffmpeg.tar.xz"), outdir=str(f), verbosity=-1)
+    ex = f.glob("*/bin/*")
+    for extracted in f.glob("*/ffmpeg"):
+        shutil.copy2(extracted, str(f))
+
+    return f / "ffmpeg"
+
+
+def download_mac(f: Path, arch: str) -> Path:
+    url = ""
+    if arch == "i386" or arch == "i686":
+        _logger.error(
+            "Unsupported autodownload of ffmpeg in macos in 32 bit intel or amd cpus"
+        )
+    elif arch == "x86_64":
+        url = "https://evermeet.cx/ffmpeg/ffmpeg-7.1.7z"
+    else:
+        _logger.error(f"Unknown archiecture type: {arch}")
+        raise Exception(f"Unsupported architecture: {arch} for ffmpeg autodownload")
+
+    _logger.info(f"Downloading ffmpeg from {url}")
+    urlretrieve(url, str(f / "ffmpeg.7z"))
+    extract_archive(archive=str(f / "ffmpeg.7z"), outdir=str(f), verbosity=-1)
+    return f / "ffmpeg"

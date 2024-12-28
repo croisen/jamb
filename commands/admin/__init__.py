@@ -55,7 +55,7 @@ class Admin(Cog):
             await self.bot.tree.sync()
         else:
             await ctx.reply("Now registering commands for the current guild")
-            await self.bot.tree.sync(guild=ctx.guild())
+            await self.bot.tree.sync(guild=ctx.guild)
 
     @hybrid_command()
     @guild_only()

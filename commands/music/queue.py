@@ -22,6 +22,7 @@ class Queue:
         self.channel_id: int = channel_id
         self.voice_client = vc
         self.last_play_time: int = time.time()
+        self.searching: bool = False
 
         self.currently_playing: Optional[Video] = None
         self.queue: List[Video] = []
@@ -31,21 +32,25 @@ class Queue:
         random.shuffle(self.queue)
 
     async def next(self, skip: bool) -> None:
-        match self.loop_state:
-            case self.LS_NORMAL:
-                if len(self.queue) >= 1:
-                    self.currently_playing = self.queue.pop(0)
-                else:
-                    self.currently_playing = None
-                    return
-            case self.LS_LOOP_1:
-                pass
-            case self.LS_LOOP_A:
-                self.queue.append(self.currently_playing)
-                self.currently_playing = self.queue.pop(0)
+        if self.searching:
+            return
 
-        self.currently_playing = await self.currently_playing.renew()
-        if not skip:
+        if self.loop_state == self.LS_NORMAL:
+            if len(self.queue) >= 1:
+                self.currently_playing = self.queue.pop(0)
+            else:
+                self.currently_playing = None
+                return
+        elif self.loop_state == self.LS_LOOP_1:
+            pass
+        elif self.loop_state == self.LS_LOOP_A:
+            self.queue.append(self.currently_playing)
+            self.currently_playing = self.queue.pop(0)
+
+        if not skip and self.currently_playing:
+            self.searching = True
+            self.currently_playing = await self.currently_playing.renew()
+            self.searching = False
             await self.play()
 
     async def add(self, vid: Video) -> None:

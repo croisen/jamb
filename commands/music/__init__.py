@@ -6,7 +6,7 @@ __version__ = "0.0.1"
 
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 import datetime
 import logging
 import time
@@ -17,7 +17,7 @@ from discord.ext.commands import Cog, Context
 from discord.ext.commands import guild_only, hybrid_command
 
 from utils.bot_config import CroiBot
-from utils.yt_vid import search
+from utils.yt_vid import a_search
 
 from .queue import Queue
 
@@ -79,10 +79,12 @@ class Music(Cog):
             # none
             self.queues.update({ctx.guild.id: q})
 
+        q.searching = True
         msg = await ctx.reply("Searching")
-        vid = await search(str(self.bot.ffmpeg), music)
+        vid = await a_search(str(self.bot.ffmpeg), music)
         await msg.delete()
         await q.add(vid)
+        q.searching = False
 
     @hybrid_command()
     @guild_only()
@@ -120,6 +122,13 @@ class Music(Cog):
             current = q.currently_playing.title
             embed.url = q.currently_playing.url
 
+        if q.loop_state == q.LS_NORMAL:
+            current += "\nLoop: Off"
+        elif q.loop_state == q.LS_LOOP_1:
+            current += "\nLoop: One"
+        elif q.loop_state == q.LS_LOOP_A:
+            current += "\nLoop: All"
+
         embed.title = f"Music Queue for {ctx.guild.name}"
         embed.description = f"Currently playing: {current}"
         embed.timestamp = datetime.datetime.utcnow()
@@ -156,6 +165,35 @@ class Music(Cog):
         s = "\n".join(skipped)
         await ctx.reply(f"{s}\nSkipped {len(skipped)} song(s)")
         await q.play()
+
+    @hybrid_command()
+    @guild_only()
+    async def shuffle(self, ctx: Context) -> None:
+        q = await self.check_vc_get_queue(ctx)
+        if not q:
+            return
+
+        q.shuffle()
+        await ctx.reply("Shuffled playlist")
+
+    @hybrid_command()
+    @guild_only()
+    async def loop(self, ctx: Context, loop_type: Literal["off", "one", "all"]) -> None:
+        q = await self.check_vc_get_queue(ctx)
+        if not q:
+            return
+
+        if loop_type == "off":
+            q.loop_state = q.LS_NORMAL
+            await ctx.reply("Set loop to off")
+        elif loop_type == "one":
+            q.loop_state = q.LS_LOOP_1
+            await ctx.reply("Set loop to one")
+        elif loop_type == "all":
+            q.loop_state = q.LS_LOOP_A
+            await ctx.reply("Set loop to all")
+        else:
+            await ctx.reply("Invalid loop type use 'off', 'one', or 'all'")
 
 
 async def setup(bot: CroiBot) -> None:

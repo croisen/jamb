@@ -1,6 +1,6 @@
+/3rd_party/
 /env/
 /logs/
-/ffmpeg/
 __pycache__/
 
 config.json

@@ -40,7 +40,6 @@ class CroiBot(AutoShardedBot):
         if not self.config:
             self.config(self.config_file)
 
-        self.logger.info(self.ffmpeg)
         await self.load_extension("commands.admin")
         await self.load_extension("commands.general")
         await self.load_extension("commands.music")
