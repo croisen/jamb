@@ -42,19 +42,19 @@ class Video:
 def search(ffmpeg: str, search_term: str) -> Video:
     vid = None
     params = {
+        "default_search": "ytsearch1",
         "ffmpeg_location": ffmpeg,
-        "format": "opus/bestaudio",
+        "format": "bestaudio",
         "logger": _logger,
-        "noplaylist": "True",
+        "noplaylist": True,
     }
 
     with YoutubeDL(params) as ydl:
-        if urlparse(search_term).scheme in ("http", "https"):
-            vid = ydl.extract_info(search_term, download=False)
-        else:
-            vid = ydl.extract_info(f"ytsearch:{search_term}", download=False)
+        vid = ydl.sanitize_info(ydl.extract_info(search_term, download=False))
+        if urlparse(search_term).scheme not in ("http", "https"):
+            vid = ydl.sanitize_info(ydl.extract_info(search_term, download=False))["entries"][0]
 
-        return Video(ydl.sanitize_info(vid)["entries"][0], ffmpeg)
+        return Video(vid, ffmpeg)
 
 
 async def a_search(ffmpeg: str, search_term: str) -> Video:

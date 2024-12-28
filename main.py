@@ -4,6 +4,7 @@ import asyncio
 import logging
 import platform
 import os
+import sys
 
 from utils import bot_config, ffmpeg, logger, path_stuff, phantomjs
 
@@ -17,6 +18,7 @@ async def main():
     ffmpeg_path = ffmpeg.download_ffmpeg(sc_dir / "3rd_party" / "ffmpeg")
     phantomjs_path = phantomjs.download_phantomjs(sc_dir / "3rd_party" / "phantomjs")
     os.environ["PHANTOM_JS"] = str(phantomjs_path)
+    os.environ["PATH"] = f"{phantomjs_path}{os.pathsep}{os.environ['PATH']}{os.pathsep}{ffmpeg_path}"
 
     if str(ffmpeg_path).startswith(str(sc_dir)) and platform.system() == "Linux":
         _logger = logging.getLogger(__name__)

@@ -64,8 +64,9 @@ class Admin(Cog):
         self.logger.info("Syncing commands")
         synced = await self.bot.tree.sync(guild=g)
         self.logger.info(
-            f"Synced the following commands: {pprint.pformat(synced, indent=4, width=80)}"
+            f"Synced the following commands:\n{pprint.pformat(synced, indent=4, width=80, compact=False)}"
         )
+
         await ctx.reply(f"Synced {len(synced)} commands")
 
     @hybrid_command()
