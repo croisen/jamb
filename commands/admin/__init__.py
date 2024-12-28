@@ -7,6 +7,7 @@ __version__ = "0.0.1"
 __path__ = __import__("pkgutil").extend_path(__path__, __name__)
 
 import logging
+import pprint
 
 from discord.ext.commands import Cog, Context
 from discord.ext.commands import guild_only, hybrid_command
@@ -29,6 +30,7 @@ class Admin(Cog):
     async def logout(self, ctx: Context) -> None:
         if not await self.bot.is_owner(ctx.author):
             await ctx.reply("You can't make me logout")
+            return
 
         self.logger.warning(f"Now logging out (Invoked by: {ctx.author.name})")
         await ctx.reply("Now logging out")
@@ -49,19 +51,29 @@ class Admin(Cog):
     async def register(self, ctx: Context, reg_global: bool = False) -> None:
         if not await self.bot.is_owner(ctx.author):
             await ctx.reply("You can't make me re-register my commands")
+            return
 
+        g = None
         if reg_global:
             await ctx.reply("Now registering commands globally")
-            await self.bot.tree.sync()
+            g = None
         else:
             await ctx.reply("Now registering commands for the current guild")
-            await self.bot.tree.sync(guild=ctx.guild)
+            g = ctx.guild
+
+        self.logger.info("Syncing commands")
+        synced = await self.bot.tree.sync(guild=g)
+        self.logger.info(
+            f"Synced the following commands: {pprint.pformat(synced, indent=4, width=80)}"
+        )
+        await ctx.reply(f"Synced {len(synced)} commands")
 
     @hybrid_command()
     @guild_only()
     async def reload(self, ctx: Context) -> None:
         if not await self.bot.is_owner(ctx.author):
             await ctx.reply("I'm not reloading my modules")
+            return
 
         await ctx.reply("Reloading modules...")
         self.logger.info(f"Reloading extensions (Invoked by: {ctx.author.name})")

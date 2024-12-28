@@ -64,7 +64,6 @@ def download_win(f: Path, arch: str) -> Path:
     _logger.info(f"Downloading phantomjs from {url}")
     urlretrieve(url, str(f / "phantomjs.zip"))
     extract_archive(archive=str(f / "phantomjs.zip"), outdir=str(f), verbosity=-1)
-    ex = f.glob("*/bin/*")
     for extracted in f.glob("*/bin/*"):
         shutil.copy2(extracted, str(f))
 
@@ -83,7 +82,6 @@ def download_lin(f: Path, arch: str) -> Path:
     _logger.info(f"Downloading phantomjs from {url}")
     urlretrieve(url, str(f / "phantomjs.tar.bz2"))
     extract_archive(archive=str(f / "phantomjs.tar.bz2"), outdir=str(f), verbosity=-1)
-    ex = f.glob("*/bin/*")
     for extracted in f.glob("*/bin/*"):
         shutil.copy2(extracted, str(f))
 
@@ -106,7 +104,6 @@ def download_mac(f: Path, arch: str) -> Path:
     _logger.info(f"Downloading phantomjs from {url}")
     urlretrieve(url, str(f / "phantomjs.zip"))
     extract_archive(archive=str(f / "phantomjs.zip"), outdir=str(f), verbosity=-1)
-    ex = f.glob("*/bin/*")
     for extracted in f.glob("*/bin/*"):
         shutil.copy2(extracted, str(f))
 

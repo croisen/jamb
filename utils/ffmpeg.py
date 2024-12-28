@@ -67,7 +67,6 @@ def download_win(f: Path, arch: str) -> Path:
     _logger.info(f"Downloading ffmpeg from {url}")
     urlretrieve(url, str(f / "ffmpeg.7z"))
     extract_archive(archive=str(f / "ffmpeg.7z"), outdir=str(f), verbosity=-1)
-    ex = f.glob("*/bin/*")
     for extracted in f.glob("*/bin/*"):
         shutil.copy2(extracted, str(f))
 
@@ -81,6 +80,7 @@ def download_lin(f: Path, arch: str) -> Path:
     _logger.warning(
         "Either install ffmpeg through your package manager or install nscd with your package manager"
     )
+
     url = ""
     if arch == "i386" or arch == "i686":
         url = "https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-i686-static.tar.xz"
@@ -102,7 +102,6 @@ def download_lin(f: Path, arch: str) -> Path:
     _logger.info(f"Downloading ffmpeg from {url}")
     urlretrieve(url, str(f / "ffmpeg.tar.xz"))
     extract_archive(archive=str(f / "ffmpeg.tar.xz"), outdir=str(f), verbosity=-1)
-    ex = f.glob("*/bin/*")
     for extracted in f.glob("*/ffmpeg"):
         shutil.copy2(extracted, str(f))
 
